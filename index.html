@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Animal Fact Break</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main id="app">
+    <!-- Page 1: Free time question -->
+    <section id="time-page" class="page active">
+      <div class="card">
+        <h1>Welcome!</h1>
+        <p class="subtitle">Before we begin, tell us a bit about your day.</p>
+        <label for="freeTime" class="question">
+          When do you have 5 to 10 minutes of free time?
+        </label>
+        <input
+          type="text"
+          id="freeTime"
+          placeholder="e.g. After lunch, before bed, on the bus..."
+          autocomplete="off"
+        />
+        <label for="freeTimeClock" class="question">
+          What time of day is that, roughly?
+        </label>
+        <input type="time" id="freeTimeClock" />
+        <p class="hint">We'll send you a daily reminder at that time so you don't miss your curiosity break.</p>
+        <button id="continueBtn">Continue →</button>
+      </div>
+    </section>
+
+    <!-- Page 2: Home / animal facts + chat -->
+    <section id="home-page" class="page">
+      <div class="card home-card">
+        <header class="home-header">
+          <h1>🐾 Curiosity Corner</h1>
+          <p id="userPlan" class="subtitle"></p>
+        </header>
+
+        <div class="home-grid">
+          <aside class="fact-side">
+            <div class="fact-box">
+              <p id="factText">Click "New fact" to start.</p>
+            </div>
+            <p class="counter" id="counter"></p>
+            <button id="factBtn">🎲 New fact</button>
+            <button id="backBtn" class="secondary">← Change my answer</button>
+            <div id="notifStatus" class="notif-status"></div>
+            <button id="testNotifBtn" class="secondary" type="button">🔔 Test notification</button>
+          </aside>
+
+          <section class="chat-side">
+            <div id="chatLog" class="chat-log" aria-live="polite"></div>
+            <form id="chatForm" class="chat-form">
+              <input
+                type="text"
+                id="chatInput"
+                placeholder="Ask anything, or share what you think..."
+                autocomplete="off"
+              />
+              <button type="submit">Send</button>
+            </form>
+            <div class="chip-row" id="chipRow"></div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

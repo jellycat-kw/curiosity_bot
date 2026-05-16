@@ -129,9 +129,18 @@ function randomFact() {
   factsSeen += 1;
   counterEl.textContent = `Facts learned: ${factsSeen}`;
 
-  addBotMessage(`Here's something new for you: ${currentFact.text}`);
+  const factLeads = [
+    "Here's something new for you:",
+    "Did you know —",
+    "Try this one on:",
+    "Ready? Here's a fresh one:",
+    "Okay, this one is wild:",
+    "Bet you haven't heard this:",
+    "From the curious corners of biology:",
+  ];
+  addBotMessage(`${pick("factLead", factLeads)} ${currentFact.text}`);
   addBotMessage(currentFact.question);
-  renderChips(["Why?", "Tell me more", "🎲 New fact"]);
+  renderChips(pickChips());
 }
 
 function addMessage(text, role) {
@@ -157,46 +166,120 @@ function renderChips(labels) {
   });
 }
 
+// Pools of phrasings — each call to pick() returns a random one
+// that hasn't been used immediately before (per-pool memory).
+const recent = {};
+function pick(key, options) {
+  const last = recent[key];
+  const choices = options.length > 1 ? options.filter(o => o !== last) : options;
+  const choice = choices[Math.floor(Math.random() * choices.length)];
+  recent[key] = choice;
+  return choice;
+}
+
+const phrases = {
+  whyLead: [
+    "Here's the science:",
+    "Great question.",
+    "The reason is actually pretty cool —",
+    "So the answer is:",
+    "Turns out:",
+    "Funny you ask —",
+    "Here's why:",
+  ],
+  deeperLead: [
+    "Want a layer deeper? Try this:",
+    "Here's the part most people miss —",
+    "And here's where it gets weirder:",
+    "Going one level further:",
+    "If that surprised you, this will too —",
+    "There's a connection I love about this —",
+  ],
+  unknownLead: [
+    "Totally fair — most people haven't thought about it. Here's a hint:",
+    "No pressure! Here's something to nudge you:",
+    "Honestly, that's the most common answer. A clue:",
+    "That's okay — try this lens:",
+  ],
+  thanks: [
+    "Glad you liked it. Want another? Tap 🎲 New fact, or share what you're thinking.",
+    "Anytime. Want me to find you something stranger?",
+    "Happy to. Ready for the next one?",
+    "Cheers! Curiosity stays sharp when you keep feeding it — want another fact?",
+  ],
+  onTopic: [
+    "Good thinking. Here's a layer most people miss —",
+    "Nice — you're already curious about this one. Going deeper:",
+    "I love that you noticed. Here's something else:",
+    "You're warm. Try this:",
+  ],
+  reflective: [
+    "Interesting take. What made you think of that?",
+    "I like that. What do you think would change if it were the opposite?",
+    "That's a curious thought. Where do you first remember hearing that idea?",
+    "Hmm — and what would you want to find out next?",
+    "Tell me more — what feels true about that for you?",
+    "That's a great angle. What's a question that follows from it?",
+    "Genuinely curious — what would you compare it to?",
+    "Nice. If you had to explain that to a kid, how would you say it?",
+  ],
+  comingUp: [
+    "Coming up...",
+    "On it — pulling a new one...",
+    "Let me find you something good...",
+    "Searching the animal kingdom...",
+    "One curious moment, please...",
+  ],
+  empty: [
+    "Tap 🎲 New fact and I'll share something surprising — then we can dig into it.",
+    "Hit 🎲 New fact to start. I've got plenty.",
+    "We need a fact first! Tap 🎲 New fact and we'll go from there.",
+  ],
+};
+
+const chipSets = [
+  ["Why?", "Tell me more", "🎲 New fact"],
+  ["But why?", "Go deeper", "🎲 New fact"],
+  ["Explain it to me", "What else?", "🎲 New fact"],
+  ["How does that work?", "More like this", "🎲 New fact"],
+  ["Why though?", "Surprise me again", "🎲 New fact"],
+];
+
+function pickChips() {
+  return pick("chips", chipSets);
+}
+
 function botReply(userText) {
   const t = userText.toLowerCase().trim();
 
   if (!currentFact) {
-    return "Click 🎲 New fact and I'll share something surprising — then we can dig into it.";
+    return pick("empty", phrases.empty);
   }
 
-  if (t === "🎲 new fact" || t === "new fact" || t === "another" || t === "next") {
+  if (t === "🎲 new fact" || t === "new fact" || t === "another" || t === "next" || t === "surprise me again") {
     setTimeout(randomFact, 200);
-    return "Coming up...";
+    return pick("comingUp", phrases.comingUp);
   }
 
-  // Direct intent handling
-  if (/^(why|how come|how does|how do|how can)\b/.test(t) || t === "why?" || t === "why") {
-    return currentFact.why;
+  if (/^(why|how come|how does|how do|how can|but why|why though|explain)\b/.test(t) || t === "why?" || t === "why") {
+    return `${pick("whyLead", phrases.whyLead)} ${currentFact.why}`;
   }
-  if (/(tell me more|more|deeper|cool|interesting|wow|really|details|fascinating)/.test(t)) {
-    return currentFact.deeper;
+  if (/(tell me more|more|deeper|cool|interesting|wow|really|details|fascinating|go deeper|what else|more like this)/.test(t)) {
+    return `${pick("deeperLead", phrases.deeperLead)} ${currentFact.deeper}`;
   }
   if (/(don'?t know|not sure|idk|no idea|hmm)/.test(t)) {
-    return `That's a fair answer — most people haven't thought about it. Here's a hint: ${currentFact.why}`;
+    return `${pick("unknownLead", phrases.unknownLead)} ${currentFact.why}`;
   }
-  if (/(thank|thanks|cool|awesome|neat|love it)/.test(t)) {
-    return "Glad you liked it. Want another? Tap 🎲 New fact, or share what you're thinking.";
+  if (/(thank|thanks|awesome|neat|love it|amazing|nice|great)/.test(t)) {
+    return pick("thanks", phrases.thanks);
   }
 
-  // Topic-aware: does the user's text reference the current animal?
   const onTopic = currentFact.tags.some(tag => t.includes(tag));
   if (onTopic) {
-    return `Good thinking. Here's a layer most people miss: ${currentFact.deeper}`;
+    return `${pick("onTopic", phrases.onTopic)} ${currentFact.deeper}`;
   }
 
-  // Otherwise, treat it as a reflective answer and prompt curiosity
-  const prompts = [
-    "Interesting take. What made you think of that?",
-    "I like that. What do you think would change if it were the opposite?",
-    "That's a curious thought. Where do you think you first learned that idea?",
-    "Hmm — and what would you want to find out next?",
-  ];
-  return prompts[Math.floor(Math.random() * prompts.length)];
+  return pick("reflective", phrases.reflective);
 }
 
 function handleUserInput(text) {
@@ -207,7 +290,7 @@ function handleUserInput(text) {
   const reply = botReply(trimmed);
   setTimeout(() => {
     addBotMessage(reply);
-    renderChips(["Why?", "Tell me more", "🎲 New fact"]);
+    renderChips(pickChips());
   }, 350);
 }
 
